@@ -29,15 +29,25 @@ public class BinanceOrderBookStreamer implements OrderBookStreamer {
         BinanceApiRestClient client = factory.newRestClient();
 
         this.symbols = symbols;
-        this.orderLimit = 10;
+        this.orderLimit = 5;
         this.caches = new HashMap<>();
 
+        // create caches
         for (String symbol: symbols){
             symbol = symbol.toUpperCase();
-            OrderBook orderBook = client.getOrderBook(symbol, orderLimit);
-
-            BinanceDepthCache cache = new BinanceDepthCache(orderBook);
+            BinanceDepthCache cache = new BinanceDepthCache();
             this.caches.put(symbol, cache);
+        }
+
+        // subscribe to updates
+        this.startStreaming();
+
+        // fetch order book
+        for (String symbol: symbols){
+            symbol = symbol.toUpperCase();
+            // TODO add try
+            OrderBook orderBook = client.getOrderBook(symbol, orderLimit);
+            this.caches.get(symbol).initCache(orderBook);
         }
     }
 
@@ -49,18 +59,12 @@ public class BinanceOrderBookStreamer implements OrderBookStreamer {
         String csv = String.join(",", this.symbols);
 
         wsClient.onDepthEvent(csv.toLowerCase(), (DepthEvent response) -> {
+            // TODO try
             String symbol = response.getSymbol().toUpperCase();
+
             BinanceDepthCache cache = caches.get(symbol);
-            if (response.getFinalUpdateId() > cache.getUpdated()) {
-                cache.setUpdated(response.getFinalUpdateId());
-                cache.updateCache(response.getAsks(), response.getBids());
-                cache.printDepthCache(symbol);
-            }
+            cache.updateCache(response);
+            cache.printDepthCache(symbol);
         });
-    }
-
-    @Override
-    public void stopStreaming() {
-
     }
 }

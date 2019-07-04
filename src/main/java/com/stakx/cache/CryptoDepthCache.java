@@ -1,5 +1,8 @@
 package com.stakx.cache;
 
+import com.sun.org.apache.xpath.internal.operations.Bool;
+import javafx.util.Pair;
+
 import java.math.BigDecimal;
 import java.util.*;
 
@@ -12,14 +15,20 @@ public class CryptoDepthCache implements DepthCache<NavigableMap<BigDecimal, Big
 
     // saved as price: qty
     private Map<String, NavigableMap<BigDecimal, BigDecimal>> depthCache;
+    private Map<String, Pair<Long, NavigableMap<BigDecimal, BigDecimal>> > pendingUpdates;
+
+    public CryptoDepthCache(){
+        this.depthCache = new HashMap<>();
+    }
 
     public CryptoDepthCache(NavigableMap<BigDecimal, BigDecimal> initialAsks, NavigableMap<BigDecimal, BigDecimal> initialBids, long lastUpdated){
+        this.depthCache = new HashMap<>();
         initCache(initialAsks, initialBids, lastUpdated);
     }
 
     @Override
     public void initCache(NavigableMap<BigDecimal, BigDecimal> initialAsks, NavigableMap<BigDecimal, BigDecimal> initialBids, long lastUpdated) {
-        this.depthCache = new HashMap<>();
+        this.depthCache.clear();
         this.lastUpdateId = lastUpdated;
 
         depthCache.put(ASKS, initialAsks);
@@ -32,13 +41,14 @@ public class CryptoDepthCache implements DepthCache<NavigableMap<BigDecimal, Big
     public void updateCache(NavigableMap<BigDecimal, BigDecimal> deltaAsks, NavigableMap<BigDecimal, BigDecimal> deltaBids) {
         this.updateCache(BIDS, deltaBids);
         this.updateCache(ASKS, deltaAsks);
-        System.out.println("Cache updated!");
     }
 
     private void updateCache(String key, NavigableMap<BigDecimal, BigDecimal> deltaData){
+
         for (Map.Entry<BigDecimal, BigDecimal> entry: deltaData.entrySet()){
             BigDecimal price = entry.getKey();
             BigDecimal qty = entry.getValue();
+
             if (qty.compareTo(BigDecimal.ZERO) == 0) {
                 depthCache.get(key).remove(price);
             } else {
@@ -76,16 +86,26 @@ public class CryptoDepthCache implements DepthCache<NavigableMap<BigDecimal, Big
 
     @Override
     public void printDepthCache() {
-        //System.out.println(this.depthCache);
-        System.out.println("ASKS:");
-        this.getAsks().entrySet().forEach(entry -> System.out.println(toDepthCacheEntryString(entry)));
-        System.out.println("BIDS:");
-        this.getBids().entrySet().forEach(entry -> System.out.println(toDepthCacheEntryString(entry)));
+        if (this.getAsks() == null && this.getBids()== null){
+            System.out.println("Cache empty ...");
+            return;
+        }
+        if (this.getAsks() != null) {
+            System.out.println("ASKS:");
+            this.getAsks().entrySet().forEach(entry -> System.out.println(toDepthCacheEntryString(entry)));
+        }
+        if(this.getBids()!= null) {
+            System.out.println("BIDS:");
+            this.getBids().entrySet().forEach(entry -> System.out.println(toDepthCacheEntryString(entry)));
+        }
     }
 
     private static String toDepthCacheEntryString(Map.Entry<BigDecimal, BigDecimal> depthCacheEntry) {
         return depthCacheEntry.getKey().toPlainString() + " / " + depthCacheEntry.getValue();
     }
 
+    public boolean isEmpty(){
+        return this.depthCache.isEmpty();
+    }
 
 }

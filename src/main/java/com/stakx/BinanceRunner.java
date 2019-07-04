@@ -39,8 +39,8 @@ public class BinanceRunner {
             OrderBookStreamer binanceStreamer = new BinanceOrderBookStreamer(api_key, api_secret);
             List<String> symbols = new ArrayList<>();
             symbols.add("ETHBTC");
+            symbols.add("ETHUSDT");
             binanceStreamer.initStreamer(symbols);
-            binanceStreamer.startStreaming();
         } else {
             System.out.println("Unable to read api credentials.");
         }

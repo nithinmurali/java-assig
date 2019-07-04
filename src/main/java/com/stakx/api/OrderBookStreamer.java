@@ -6,6 +6,5 @@ public interface OrderBookStreamer {
 
     public void initStreamer(List<String> symbols);
     public void startStreaming();
-    public void stopStreaming();
 
 }

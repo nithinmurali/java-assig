@@ -1,18 +1,29 @@
 package com.stakx.cache;
 
+import com.binance.api.client.domain.event.DepthEvent;
 import com.binance.api.client.domain.market.OrderBook;
 import com.binance.api.client.domain.market.OrderBookEntry;
 
 import java.math.BigDecimal;
-import java.util.Comparator;
-import java.util.List;
-import java.util.NavigableMap;
-import java.util.TreeMap;
+import java.util.*;
 
 public class BinanceDepthCache extends CryptoDepthCache {
 
+    private List<DepthEvent> pendingUpdates;
+
+    public BinanceDepthCache(){
+        super();
+        this.pendingUpdates = new ArrayList<>();
+    }
+
     public BinanceDepthCache(OrderBook orderBook){
         super(getAsksFromOrderBook(orderBook), getBidsFromOrderBook(orderBook), orderBook.getLastUpdateId());
+        this.pendingUpdates = new ArrayList<>();
+    }
+
+    public void initCache(OrderBook orderBook) {
+        super.initCache(getAsksFromOrderBook(orderBook), getBidsFromOrderBook(orderBook), orderBook.getLastUpdateId());
+        this.applyPendingUpdates();
     }
 
     private static NavigableMap<BigDecimal, BigDecimal> getAsksFromOrderBook(OrderBook orderBook){
@@ -31,29 +42,53 @@ public class BinanceDepthCache extends CryptoDepthCache {
         return bids;
     }
 
-    public void updateCache(List<OrderBookEntry> orderBookDeltaAsks, List<OrderBookEntry>  orderBookDeltaBids) {
-        for (OrderBookEntry orderBookDelta : orderBookDeltaAsks) {
+    public void updateCache(DepthEvent event) {
+
+        // if cache is not inited store to pending updates
+        if (isEmpty()){
+            System.out.println("Update pushed to pending... : " + this.pendingUpdates.size());
+            this.pendingUpdates.add(event);
+            return;
+        }
+
+        // only update only if this update is newer than cache
+        if (event.getFinalUpdateId() < this.getUpdated()){
+            System.out.println("Update skipped as update is old...");
+            return;
+        }
+
+        for (OrderBookEntry orderBookDelta : event.getAsks()) {
             BigDecimal price = new BigDecimal(orderBookDelta.getPrice());
             BigDecimal qty = new BigDecimal(orderBookDelta.getQty());
             if (qty.compareTo(BigDecimal.ZERO) == 0) {
-                // qty=0 means remove this level
                 this.getAsks().remove(price);
             } else {
                 this.getAsks().put(price, qty);
             }
         }
 
-        for (OrderBookEntry orderBookDelta : orderBookDeltaBids) {
+        for (OrderBookEntry orderBookDelta : event.getBids()) {
             BigDecimal price = new BigDecimal(orderBookDelta.getPrice());
             BigDecimal qty = new BigDecimal(orderBookDelta.getQty());
             if (qty.compareTo(BigDecimal.ZERO) == 0) {
-                // qty=0 means remove this level
                 this.getBids().remove(price);
             } else {
                 this.getBids().put(price, qty);
             }
         }
 
+        this.setUpdated(event.getFinalUpdateId());
+
+        System.out.println("Cache updated!");
+
+    }
+
+    private void applyPendingUpdates(){
+        System.out.println("Applying pending updates " + this.pendingUpdates.size());
+        for (DepthEvent event: this.pendingUpdates){
+            this.updateCache(event);
+        }
+        this.pendingUpdates.clear();
     }
 
     public void printDepthCache(String symbol) {

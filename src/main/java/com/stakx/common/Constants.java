@@ -6,6 +6,8 @@ import java.util.Properties;
 
 public class Constants {
     public static final String CONFIG_FILE = "config.properties";
+    public static final int ORDER_LIMIT = 5;
+
 
     public static Properties getConfigProp(){
         try (InputStream input = Constants.class.getClassLoader().getResourceAsStream(Constants.CONFIG_FILE)) {

@@ -5,9 +5,11 @@ import com.binance.api.client.BinanceApiRestClient;
 import com.binance.api.client.BinanceApiWebSocketClient;
 import com.binance.api.client.domain.event.DepthEvent;
 import com.binance.api.client.domain.market.OrderBook;
+import com.binance.api.client.domain.market.TickerPrice;
 import com.binance.api.client.exception.BinanceApiException;
 import com.stakx.cache.BinanceDepthCache;
 import com.stakx.cache.RedisDepthCache;
+import com.stakx.common.Constants;
 
 import java.util.*;
 
@@ -26,16 +28,22 @@ public class BinanceOrderBookStreamer implements OrderBookStreamer {
     @Override
     public void initStreamer(List<String> symbols) {
 
-        System.out.println("Streamer initialized!");
-
         BinanceApiRestClient client = factory.newRestClient();
 
-        this.symbols = symbols;
-        this.orderLimit = 10;
+        if (symbols == null){
+            this.fetchSymbols();
+        } else {
+            this.symbols = symbols;
+        }
+
+        System.out.println("Streamer initialized for " + this.symbols.size() + " symbols.");
+
+
+        this.orderLimit = Constants.ORDER_LIMIT;
         this.caches = new HashMap<>();
 
         // create caches
-        for (String symbol: symbols){
+        for (String symbol: this.symbols){
             symbol = symbol.toUpperCase();
             BinanceDepthCache cache = new RedisDepthCache(symbol);
             this.caches.put(symbol, cache);
@@ -45,7 +53,7 @@ public class BinanceOrderBookStreamer implements OrderBookStreamer {
         this.startStreaming();
 
         // fetch order book
-        for (String symbol: symbols){
+        for (String symbol: this.symbols){
             symbol = symbol.toUpperCase();
             OrderBook orderBook = client.getOrderBook(symbol, orderLimit);
             this.caches.get(symbol).initCache(orderBook);
@@ -67,4 +75,27 @@ public class BinanceOrderBookStreamer implements OrderBookStreamer {
             cache.printDepthCache(symbol);
         });
     }
+
+    private void fetchSymbols(){
+        BinanceApiRestClient client = factory.newRestClient();
+        if (this.symbols != null){
+            this.symbols.clear();
+        }
+
+        this.symbols = new ArrayList<>();
+
+        List<TickerPrice> allPrices = client.getAllPrices();
+        for (TickerPrice tickerPrice: allPrices){
+            String symbol = tickerPrice.getSymbol();
+            if (this.checkSymbol(symbol)){
+                this.symbols.add(symbol);
+                //System.out.println(symbol);
+            }
+        }
+    }
+
+    boolean checkSymbol(String symbol){
+        return symbol.endsWith("BTC");
+    }
+
 }

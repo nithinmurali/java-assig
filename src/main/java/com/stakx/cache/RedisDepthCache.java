@@ -1,11 +1,9 @@
 package com.stakx.cache;
 
 import com.binance.api.client.domain.market.OrderBook;
-import com.stakx.common.Constants;
-import org.redisson.Redisson;
+import com.stakx.repository.RedisHelper;
 import org.redisson.api.RMap;
 import org.redisson.api.RedissonClient;
-import org.redisson.config.Config;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -21,16 +19,9 @@ public class RedisDepthCache extends BinanceDepthCache {
     public RedisDepthCache(String symbol){
         super();
 
-        Properties prop = Constants.getConfigProp();
-        Config config = new Config();
-        if (prop != null) {
-            config.useSingleServer().setAddress(prop.getProperty("redis.url"));
-        } else {
-            config.useSingleServer().setAddress("redis://127.0.0.1:6379");
-        }
-        redisson = Redisson.create(config);
-
+        redisson = RedisHelper.CLIENT;
         this.symbol = symbol;
+        this.clear();
     }
 
     public void initCache(OrderBook orderBook) {
@@ -68,7 +59,6 @@ public class RedisDepthCache extends BinanceDepthCache {
     void clear(){
         this.getAsks().clear();
         this.getBids().clear();
-
     }
 
     void insertAsks(Map<BigDecimal, BigDecimal> initialAsks){

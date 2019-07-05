@@ -22,10 +22,9 @@ public class BinanceRunner {
 
         if (api_key != null && api_secret != null){
             OrderBookStreamer binanceStreamer = new BinanceOrderBookStreamer(api_key, api_secret);
-            List<String> symbols = new ArrayList<>();
-            symbols.add("ETHBTC");
-            symbols.add("ETHUSDT");
-            binanceStreamer.initStreamer(symbols);
+            //List<String> symbols = new ArrayList<>();
+            //symbols.add("ETHBTC");
+            binanceStreamer.initStreamer(null);
         } else {
             System.out.println("Unable to read api credentials.");
         }

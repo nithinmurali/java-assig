@@ -1,9 +1,8 @@
 package com.stakx.cache;
 
-import com.sun.org.apache.xpath.internal.operations.Bool;
-
 import java.math.BigDecimal;
 import java.util.Map;
+import java.util.NavigableMap;
 
 public interface DepthCache<T extends Map<BigDecimal, BigDecimal>> {
 
@@ -11,7 +10,7 @@ public interface DepthCache<T extends Map<BigDecimal, BigDecimal>> {
 
     public void updateCache(T deltaAsks, T deltaBids);
 
-    public Map<String, T> getCacheContents();
+    public Map<String, NavigableMap<BigDecimal, BigDecimal>> getCacheContents();
 
     public long getUpdated();
 

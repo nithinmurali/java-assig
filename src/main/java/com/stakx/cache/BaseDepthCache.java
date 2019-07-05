@@ -57,11 +57,6 @@ public class BaseDepthCache implements DepthCache<Map<BigDecimal, BigDecimal>> {
     }
 
     @Override
-    public Map<String, Map<BigDecimal, BigDecimal>> getCacheContents() {
-        return depthCache;
-    }
-
-    @Override
     public long getUpdated() {
         return this.lastUpdateId;
     }
@@ -116,6 +111,14 @@ public class BaseDepthCache implements DepthCache<Map<BigDecimal, BigDecimal>> {
 
     void insertBids(Map<BigDecimal, BigDecimal> initialBids){
         depthCache.put(BIDS, initialBids);
+    }
+
+    @Override
+    public Map<String, NavigableMap<BigDecimal, BigDecimal>> getCacheContents(){
+        Map<String, NavigableMap<BigDecimal, BigDecimal>> map = new HashMap<>();
+        map.put(ASKS, new TreeMap<>(this.getAsks()));
+        map.put(BIDS, new TreeMap<>(this.getBids()));
+        return map;
     }
 
 }

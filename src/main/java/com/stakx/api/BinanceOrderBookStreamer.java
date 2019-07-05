@@ -52,8 +52,7 @@ public class BinanceOrderBookStreamer implements OrderBookStreamer {
         }
     }
 
-    @Override
-    public void startStreaming() {
+    private void startStreaming() {
         wsClient = factory.newWebSocketClient();
 
         System.out.println("Begin Streaming!");

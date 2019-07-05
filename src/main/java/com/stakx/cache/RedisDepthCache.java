@@ -79,11 +79,4 @@ public class RedisDepthCache extends BinanceDepthCache {
         this.getBids().putAll(initialBids);
     }
 
-    public Map<String, NavigableMap<BigDecimal, BigDecimal>> getCache(){
-        Map<String, NavigableMap<BigDecimal, BigDecimal>> map = new HashMap<>();
-        map.put(ASK_KEY, new TreeMap<>(this.getAsks()));
-        map.put(BIDS_KEY, new TreeMap<>(this.getBids()));
-        return map;
-    }
-
 }

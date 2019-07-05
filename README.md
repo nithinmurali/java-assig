@@ -14,7 +14,7 @@ Install all the dependencies listed
 Then create the configuration file (config.properties) and fill values.
 
 ```
-cp config.properties.sample config.properties
+cp src/main/resources/config.properties.sample src/main/resources/config.properties
 ```
 
 Run the code

@@ -18,3 +18,6 @@ cp config.properties.sample config.properties
 ```
 
 Run the code
+```
+mvn exec:java -Dexec.mainClass="com.stakx.BinanceRunner"
+```

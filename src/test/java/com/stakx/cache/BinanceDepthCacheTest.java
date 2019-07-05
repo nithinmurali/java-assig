@@ -4,7 +4,6 @@ import com.binance.api.client.domain.event.DepthEvent;
 import com.binance.api.client.domain.market.OrderBook;
 import com.binance.api.client.domain.market.OrderBookEntry;
 import junit.framework.TestCase;
-import org.apache.commons.lang3.builder.ToStringExclude;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -14,15 +13,16 @@ import java.util.Random;
 
 import static org.junit.Assert.assertNotEquals;
 
-public class BinanceDepthCachetest {
+public class BinanceDepthCacheTest {
 
     private OrderBook orderBook;
-    private DepthEvent depthEvent;
+    private DepthEvent depthEvent, oldDepthEvent;
 
     @Before
     public void setUp(){
-        this.orderBook = this.generateOrderBook();
+        this.orderBook = this.generateOrderBook(100L);
         this.depthEvent = this.generateEvent(100L);
+        this.oldDepthEvent = this.generateEvent(10L);
     }
 
     @Test
@@ -41,7 +41,21 @@ public class BinanceDepthCachetest {
         TestCase.assertEquals(depthCache.getPendingUpdatesSize(), 1);
         depthCache.initCache(this.orderBook);
         TestCase.assertEquals(depthCache.getPendingUpdatesSize(), 0);
+        assertNotEquals(depthCache.getAsks().size(), this.orderBook.getAsks().size());
+        assertNotEquals(depthCache.getBids().size(), this.orderBook.getBids().size());
     }
+
+    @Test
+    public void pendingOldUpdatesTest(){
+        BinanceDepthCache depthCache = new BinanceDepthCache();
+        depthCache.updateCache(this.oldDepthEvent);
+        TestCase.assertEquals(depthCache.getPendingUpdatesSize(), 1);
+        depthCache.initCache(this.orderBook);
+        TestCase.assertEquals(depthCache.getPendingUpdatesSize(), 0);
+        TestCase.assertEquals(depthCache.getAsks().size(), this.orderBook.getAsks().size());
+        TestCase.assertEquals(depthCache.getBids().size(), this.orderBook.getBids().size());
+    }
+
 
     @Test
     public void updateTest(){
@@ -54,10 +68,11 @@ public class BinanceDepthCachetest {
         assertNotEquals(depthCache.getBids().size(), this.orderBook.getBids().size());
     }
 
-    private OrderBook generateOrderBook(){
+    private OrderBook generateOrderBook(long lastUpdated){
         OrderBook orderBook = new OrderBook();
         List<OrderBookEntry> asks = new ArrayList<>();
         List<OrderBookEntry> bids = new ArrayList<>();
+        orderBook.setLastUpdateId(lastUpdated);
 
         for (int i=0; i< 10; i++) {
             OrderBookEntry o = new OrderBookEntry();
@@ -76,7 +91,7 @@ public class BinanceDepthCachetest {
     private List<OrderBook> generateOrderBooks(int number){
         List<OrderBook> orderBooks = new ArrayList<>();
         for(int i=0;i< number; i++){
-            orderBooks.add(generateOrderBook());
+            orderBooks.add(generateOrderBook(100L));
         }
         return orderBooks;
     }
@@ -89,7 +104,7 @@ public class BinanceDepthCachetest {
 
     private DepthEvent generateEvent(long updated){
         DepthEvent e = new DepthEvent();
-        OrderBook ob = generateOrderBook();
+        OrderBook ob = generateOrderBook(10L);
         e.setAsks(ob.getAsks());
         e.setBids(ob.getBids());
         e.setFinalUpdateId(updated);

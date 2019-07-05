@@ -1,2 +1,3 @@
 api.key=
 api.secret=
+redis.url=

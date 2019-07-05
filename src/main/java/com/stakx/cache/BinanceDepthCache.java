@@ -46,14 +46,14 @@ public class BinanceDepthCache extends BaseDepthCache {
 
         // if cache is not inited store to pending updates
         if (isEmpty()){
-            System.out.println("Update pushed to pending... : " + this.pendingUpdates.size());
+            //System.out.println("Update pushed to pending... : " + this.pendingUpdates.size());
             this.pendingUpdates.add(event);
             return;
         }
 
         // only update only if this update is newer than cache
         if (event.getFinalUpdateId() < this.getUpdated()){
-            System.out.println("Update skipped as update is old...");
+            //System.out.println("Update skipped as update is old...");
             return;
         }
 

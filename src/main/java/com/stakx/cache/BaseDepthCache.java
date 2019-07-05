@@ -6,7 +6,7 @@ import javafx.util.Pair;
 import java.math.BigDecimal;
 import java.util.*;
 
-public class CryptoDepthCache implements DepthCache<NavigableMap<BigDecimal, BigDecimal>> {
+public class BaseDepthCache implements DepthCache<Map<BigDecimal, BigDecimal>> {
 
     private static final String BIDS  = "BIDS";
     private static final String ASKS  = "ASKS";
@@ -14,36 +14,34 @@ public class CryptoDepthCache implements DepthCache<NavigableMap<BigDecimal, Big
     private long lastUpdateId;
 
     // saved as price: qty
-    private Map<String, NavigableMap<BigDecimal, BigDecimal>> depthCache;
-    private Map<String, Pair<Long, NavigableMap<BigDecimal, BigDecimal>> > pendingUpdates;
+    private Map<String, Map<BigDecimal, BigDecimal>> depthCache;
 
-    public CryptoDepthCache(){
+    public BaseDepthCache(){
         this.depthCache = new HashMap<>();
     }
 
-    public CryptoDepthCache(NavigableMap<BigDecimal, BigDecimal> initialAsks, NavigableMap<BigDecimal, BigDecimal> initialBids, long lastUpdated){
+    public BaseDepthCache(Map<BigDecimal, BigDecimal> initialAsks, Map<BigDecimal, BigDecimal> initialBids, long lastUpdated){
         this.depthCache = new HashMap<>();
         initCache(initialAsks, initialBids, lastUpdated);
     }
 
     @Override
-    public void initCache(NavigableMap<BigDecimal, BigDecimal> initialAsks, NavigableMap<BigDecimal, BigDecimal> initialBids, long lastUpdated) {
-        this.depthCache.clear();
-        this.lastUpdateId = lastUpdated;
+    public void initCache(Map<BigDecimal, BigDecimal> initialAsks, Map<BigDecimal, BigDecimal> initialBids, long lastUpdated) {
+        this.clear();
+        this.setUpdated(lastUpdated);
 
-        depthCache.put(ASKS, initialAsks);
-        depthCache.put(BIDS, initialBids);
+        this.insertAsks(initialAsks);
+        this.insertBids(initialBids);
         System.out.println("Cache initialized!");
-
     }
 
     @Override
-    public void updateCache(NavigableMap<BigDecimal, BigDecimal> deltaAsks, NavigableMap<BigDecimal, BigDecimal> deltaBids) {
+    public void updateCache(Map<BigDecimal, BigDecimal> deltaAsks, Map<BigDecimal, BigDecimal> deltaBids) {
         this.updateCache(BIDS, deltaBids);
         this.updateCache(ASKS, deltaAsks);
     }
 
-    private void updateCache(String key, NavigableMap<BigDecimal, BigDecimal> deltaData){
+    private void updateCache(String key, Map<BigDecimal, BigDecimal> deltaData){
 
         for (Map.Entry<BigDecimal, BigDecimal> entry: deltaData.entrySet()){
             BigDecimal price = entry.getKey();
@@ -59,7 +57,7 @@ public class CryptoDepthCache implements DepthCache<NavigableMap<BigDecimal, Big
     }
 
     @Override
-    public Map<String, NavigableMap<BigDecimal, BigDecimal>> getCacheContents() {
+    public Map<String, Map<BigDecimal, BigDecimal>> getCacheContents() {
         return depthCache;
     }
 
@@ -75,12 +73,12 @@ public class CryptoDepthCache implements DepthCache<NavigableMap<BigDecimal, Big
 
 
     @Override
-    public NavigableMap<BigDecimal, BigDecimal> getAsks() {
+    public Map<BigDecimal, BigDecimal> getAsks() {
         return depthCache.get(ASKS);
     }
 
     @Override
-    public NavigableMap<BigDecimal, BigDecimal> getBids() {
+    public Map<BigDecimal, BigDecimal> getBids() {
         return depthCache.get(BIDS);
     }
 
@@ -106,6 +104,18 @@ public class CryptoDepthCache implements DepthCache<NavigableMap<BigDecimal, Big
 
     public boolean isEmpty(){
         return this.depthCache.isEmpty();
+    }
+
+    void clear(){
+        this.depthCache.clear();
+    }
+
+    void insertAsks(Map<BigDecimal, BigDecimal> initialAsks){
+        depthCache.put(ASKS, initialAsks);
+    }
+
+    void insertBids(Map<BigDecimal, BigDecimal> initialBids){
+        depthCache.put(BIDS, initialBids);
     }
 
 }

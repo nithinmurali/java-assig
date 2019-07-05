@@ -2,9 +2,10 @@ package com.stakx.cache;
 
 import com.sun.org.apache.xpath.internal.operations.Bool;
 
+import java.math.BigDecimal;
 import java.util.Map;
 
-public interface DepthCache<T> {
+public interface DepthCache<T extends Map<BigDecimal, BigDecimal>> {
 
     public void initCache(T initialAsks, T initialBids, long lastUpdated);
 
@@ -21,5 +22,7 @@ public interface DepthCache<T> {
     public T getBids();
 
     public void printDepthCache();
+
+    public boolean isEmpty();
 
 }

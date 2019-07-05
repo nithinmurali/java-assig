@@ -7,7 +7,7 @@ import com.binance.api.client.domain.market.OrderBookEntry;
 import java.math.BigDecimal;
 import java.util.*;
 
-public class BinanceDepthCache extends CryptoDepthCache {
+public class BinanceDepthCache extends BaseDepthCache {
 
     private List<DepthEvent> pendingUpdates;
 
@@ -85,6 +85,12 @@ public class BinanceDepthCache extends CryptoDepthCache {
 
     private void applyPendingUpdates(){
         System.out.println("Applying pending updates " + this.pendingUpdates.size());
+
+        if (this.isEmpty()){
+            this.pendingUpdates.clear();
+            return;
+        }
+
         for (DepthEvent event: this.pendingUpdates){
             this.updateCache(event);
         }

@@ -5,7 +5,9 @@ import com.binance.api.client.BinanceApiRestClient;
 import com.binance.api.client.BinanceApiWebSocketClient;
 import com.binance.api.client.domain.event.DepthEvent;
 import com.binance.api.client.domain.market.OrderBook;
+import com.binance.api.client.exception.BinanceApiException;
 import com.stakx.cache.BinanceDepthCache;
+import com.stakx.cache.RedisDepthCache;
 
 import java.util.*;
 
@@ -29,13 +31,13 @@ public class BinanceOrderBookStreamer implements OrderBookStreamer {
         BinanceApiRestClient client = factory.newRestClient();
 
         this.symbols = symbols;
-        this.orderLimit = 5;
+        this.orderLimit = 10;
         this.caches = new HashMap<>();
 
         // create caches
         for (String symbol: symbols){
             symbol = symbol.toUpperCase();
-            BinanceDepthCache cache = new BinanceDepthCache();
+            BinanceDepthCache cache = new RedisDepthCache(symbol);
             this.caches.put(symbol, cache);
         }
 
@@ -45,7 +47,6 @@ public class BinanceOrderBookStreamer implements OrderBookStreamer {
         // fetch order book
         for (String symbol: symbols){
             symbol = symbol.toUpperCase();
-            // TODO add try
             OrderBook orderBook = client.getOrderBook(symbol, orderLimit);
             this.caches.get(symbol).initCache(orderBook);
         }

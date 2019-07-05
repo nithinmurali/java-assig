@@ -1,5 +1,6 @@
 package com.stakx.api;
 
+import com.binance.api.client.BinanceApiCallback;
 import com.binance.api.client.BinanceApiClientFactory;
 import com.binance.api.client.BinanceApiRestClient;
 import com.binance.api.client.BinanceApiWebSocketClient;
@@ -12,6 +13,8 @@ import com.stakx.cache.RedisDepthCache;
 import com.stakx.common.Constants;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 
 public class BinanceOrderBookStreamer implements OrderBookStreamer {
 
@@ -20,6 +23,7 @@ public class BinanceOrderBookStreamer implements OrderBookStreamer {
     private Map<String, BinanceDepthCache> caches;
     private BinanceApiClientFactory factory;
     private BinanceApiWebSocketClient wsClient;
+    private final WsCallback wsCallback = new WsCallback();
 
     public BinanceOrderBookStreamer(String API_KEY, String SECRET){
         factory = BinanceApiClientFactory.newInstance(API_KEY, SECRET);
@@ -45,6 +49,7 @@ public class BinanceOrderBookStreamer implements OrderBookStreamer {
         for (String symbol: this.symbols){
             symbol = symbol.toUpperCase();
             BinanceDepthCache cache = new RedisDepthCache(symbol);
+            //BinanceDepthCache cache = new BinanceDepthCache();
             this.caches.put(symbol, cache);
         }
 
@@ -65,14 +70,15 @@ public class BinanceOrderBookStreamer implements OrderBookStreamer {
         System.out.println("Begin Streaming!");
         String csv = String.join(",", this.symbols);
 
-        wsClient.onDepthEvent(csv.toLowerCase(), (DepthEvent response) -> {
-            // TODO try
-            String symbol = response.getSymbol().toUpperCase();
-
+        final Consumer<DepthEvent> updateCache = newEvent -> {
+            String symbol = newEvent.getSymbol().toUpperCase();
             BinanceDepthCache cache = caches.get(symbol);
-            cache.updateCache(response);
+            cache.updateCache(newEvent);
             cache.printDepthCache(symbol);
-        });
+        };
+
+        wsCallback.setHandler(updateCache);
+        wsClient.onDepthEvent(csv.toLowerCase(),wsCallback);
     }
 
     private void fetchSymbols(){
@@ -93,8 +99,38 @@ public class BinanceOrderBookStreamer implements OrderBookStreamer {
         }
     }
 
+    public List<String> getSymbols(){
+        return this.symbols;
+    }
+
     boolean checkSymbol(String symbol){
         return symbol.endsWith("BTC");
+    }
+
+    private final class WsCallback implements BinanceApiCallback<DepthEvent> {
+
+        private final AtomicReference<Consumer<DepthEvent>> handler = new AtomicReference<>();
+
+        @Override
+        public void onResponse(DepthEvent depthEvent) {
+            try {
+                handler.get().accept(depthEvent);
+            } catch (final Exception e) {
+                System.err.println("Exception caught processing depth event");
+                e.printStackTrace(System.err);
+            }
+        }
+
+        @Override
+        public void onFailure(Throwable cause) {
+            System.out.println("WS connection failed. Reconnecting. cause:" + cause.getMessage());
+
+            initStreamer(getSymbols());
+        }
+
+        private void setHandler(final Consumer<DepthEvent> handler) {
+            this.handler.set(handler);
+        }
     }
 
 }

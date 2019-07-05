@@ -84,7 +84,7 @@ public class BinanceDepthCache extends BaseDepthCache {
     }
 
     private void applyPendingUpdates(){
-        System.out.println("Applying pending updates " + this.pendingUpdates.size());
+        //System.out.println("Applying pending updates " + this.pendingUpdates.size());
 
         if (this.isEmpty()){
             this.pendingUpdates.clear();
@@ -92,6 +92,9 @@ public class BinanceDepthCache extends BaseDepthCache {
         }
 
         for (DepthEvent event: this.pendingUpdates){
+            if (event.getFinalUpdateId() < this.getUpdated()){
+                continue;
+            }
             this.updateCache(event);
         }
         this.pendingUpdates.clear();

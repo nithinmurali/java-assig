@@ -24,6 +24,11 @@ public class RedisDepthCache extends BinanceDepthCache {
         this.clear();
     }
 
+    public void setRedisServer(RedissonClient redisson){
+        this.redisson = redisson;
+        this.clear();
+    }
+
     public void initCache(OrderBook orderBook) {
         RMap<String, Long> updateMap = redisson.getMap(UPDATED_TIME);
         updateMap.put(symbol, 0L);

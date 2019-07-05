@@ -27,7 +27,7 @@ public class BinanceDepthCacheTest {
 
     @Test
     public void initCacheTest(){
-        BinanceDepthCache depthCache = new BinanceDepthCache();
+        BinanceDepthCache depthCache = getCacheObject();
         TestCase.assertTrue(depthCache.isEmpty());
         depthCache.initCache(orderBook);
         TestCase.assertFalse(depthCache.isEmpty());
@@ -35,7 +35,7 @@ public class BinanceDepthCacheTest {
 
     @Test
     public void pendingUpdatesTest(){
-        BinanceDepthCache depthCache = new BinanceDepthCache();
+        BinanceDepthCache depthCache = getCacheObject();
         TestCase.assertEquals(depthCache.getPendingUpdatesSize(), 0);
         depthCache.updateCache(this.depthEvent);
         TestCase.assertEquals(depthCache.getPendingUpdatesSize(), 1);
@@ -47,7 +47,7 @@ public class BinanceDepthCacheTest {
 
     @Test
     public void pendingOldUpdatesTest(){
-        BinanceDepthCache depthCache = new BinanceDepthCache();
+        BinanceDepthCache depthCache = getCacheObject();
         depthCache.updateCache(this.oldDepthEvent);
         TestCase.assertEquals(depthCache.getPendingUpdatesSize(), 1);
         depthCache.initCache(this.orderBook);
@@ -59,13 +59,17 @@ public class BinanceDepthCacheTest {
 
     @Test
     public void updateTest(){
-        BinanceDepthCache depthCache = new BinanceDepthCache();
+        BinanceDepthCache depthCache = getCacheObject();
         depthCache.initCache(this.orderBook);
         TestCase.assertEquals(depthCache.getAsks().size(), this.orderBook.getAsks().size());
         TestCase.assertEquals(depthCache.getBids().size(), this.orderBook.getBids().size());
         depthCache.updateCache(this.depthEvent);
         assertNotEquals(depthCache.getAsks().size(), this.orderBook.getAsks().size());
         assertNotEquals(depthCache.getBids().size(), this.orderBook.getBids().size());
+    }
+
+    BinanceDepthCache getCacheObject(){
+        return new BinanceDepthCache();
     }
 
     private OrderBook generateOrderBook(long lastUpdated){

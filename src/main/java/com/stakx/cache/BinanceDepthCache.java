@@ -101,4 +101,12 @@ public class BinanceDepthCache extends BaseDepthCache {
         System.out.println("Cache for " + symbol);
         super.printDepthCache();
     }
+
+    public int getPendingUpdatesSize(){
+        if (this.pendingUpdates != null) {
+            return this.pendingUpdates.size();
+        } else {
+            return 0;
+        }
+    }
 }

@@ -35,7 +35,6 @@ public class BinanceOrderBookStreamer implements OrderBookStreamer {
         } else {
             this.symbols = symbols;
         }
-
         System.out.println("Streamer initialized for " + this.symbols.size() + " symbols.");
 
 
